@@ -18,10 +18,11 @@ dependencies = [
     "atlassian-python-api>=3.41.0",
     # Sources Git
     "GitPython>=3.1.43",
-    # Parsing documents
+    # Parsing / génération de documents bureautiques
     "python-docx>=1.1.0",
     "openpyxl>=3.1.2",
     "pymupdf>=1.24.0",
+    "python-pptx>=1.0.0",
     # Embeddings & reranking
     "sentence-transformers>=3.0.0",
     # API & CLI

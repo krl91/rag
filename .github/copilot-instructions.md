@@ -3,9 +3,15 @@
 ## Mission
 Système de gestion des connaissances projet pour architectes solution
 (industrie smart metering). Sources : Jira, Confluence, Git, transcriptions
-de réunions, documents Word/Excel/PDF, notes Obsidian. Mémoire centrale :
+de réunions, documents Word/Excel/PDF, notes Obsidian, diagrammes
+(drawio/PlantUML/Mermaid — voir skill `kb-diagrams`). Mémoire centrale :
 Neo4j (graphe de connaissances temporel, via graphiti-core pour le modèle
-d'entités/relations et le retrieval).
+d'entités/relations et le retrieval). Export possible en Word/PowerPoint/
+Excel (`kb export`, voir `export/office_writer.py`) et en diagrammes Mermaid
+(`kb reveng --diagram-out`, section Diagramme de `kb docgen`) — toujours
+déterministe, aucun appel LLM. Méthodes d'organisation (PARA, Zettelkasten,
+GTD, matrice d'Eisenhower) disponibles à la demande — voir skill
+`kb-organize` — jamais appliquées par défaut.
 
 ## LLM : optionnel, jamais un service réseau obligatoire
 - Par défaut, **aucun LLM réseau n'est requis**. Le flux normal se déroule
@@ -51,11 +57,18 @@ d'entités/relations et le retrieval).
   - neo4j (driver officiel)
   - atlassian-python-api (Jira + Confluence)
   - GitPython (dépôts Git)
-  - python-docx, openpyxl, pymupdf (Word, Excel, PDF)
+  - python-docx, openpyxl, pymupdf, python-pptx (lecture ET écriture
+    Word/Excel/PDF/PowerPoint — voir extractors/office.py pour la lecture,
+    export/office_writer.py pour l'écriture)
   - sentence-transformers (embeddings BGE-M3 + reranker BGE-reranker-v2-m3)
     — toujours locaux, jamais réseau, quelle que soit la config LLM.
   - fastapi + typer (API et CLI)
   - tree-sitter + tree-sitter-language-pack (analyse statique)
+  - Diagrammes : drawio/PlantUML/Mermaid lus via stdlib uniquement
+    (extractors/diagrams.py — xml.etree, zlib, base64, aucune dépendance
+    tierce) ; Mermaid généré via revengine/diagram_export.py (déterministe).
+    Édition avancée drawio/PlantUML : serveurs MCP optionnels
+    (`.vscode/mcp.json.example`), jamais de dépendance obligatoire.
 - LLM (si utilisé) : appels via endpoint OpenAI-compatible configurable
   (OLLAMA_BASE_URL). Jamais d'appel direct à OpenAI/Anthropic cloud.
 - Secrets uniquement via variables d'environnement (.env, python-dotenv).

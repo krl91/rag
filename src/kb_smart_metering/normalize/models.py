@@ -11,7 +11,9 @@ from typing import Any, Literal, Optional, Union
 
 from pydantic import BaseModel, Field
 
-SourceType = Literal["jira", "confluence", "git", "docx", "xlsx", "pdf", "meeting", "obsidian"]
+SourceType = Literal[
+    "jira", "confluence", "git", "docx", "xlsx", "pdf", "meeting", "obsidian", "diagram"
+]
 
 
 def normalize_file_source_id(path: Union[Path, str]) -> str:

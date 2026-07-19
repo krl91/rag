@@ -1,0 +1,17 @@
+{
+  "servers": {
+    "drawio": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "@drawio/mcp"]
+    },
+    "plantuml": {
+      "type": "stdio",
+      "command": "npx",
+      "args": ["-y", "plantuml-mcp-server"],
+      "env": {
+        "PLANTUML_SERVER_URL": "https://www.plantuml.com/plantuml"
+      }
+    }
+  }
+}

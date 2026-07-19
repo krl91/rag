@@ -146,6 +146,8 @@ Deux façons d'accéder aux automatisations :
 /kb-ingest         → ingestion d'une ou plusieurs sources
 /kb-ask            → interroger la base de connaissances
 /kb-reveng         → analyser un dépôt de code
+/kb-diagrams       → lire/générer des diagrammes (drawio, PlantUML, Mermaid)
+/kb-organize       → PARA/Zettelkasten/GTD/Eisenhower (si besoin uniquement)
 /kb-copilot-bridge → configurer le pont Copilot (Windows sans Ollama)
 /kb-api-call       → générer un appel API curl/Python
 ```
@@ -966,6 +968,16 @@ kb docgen --repo /repo --lang java|python|csharp --from-extraction <fichier>.jso
 # Avec Ollama :
 uv run kb reveng --repo /repo --lang java|python|csharp
 uv run kb docgen --repo /repo --lang java|python|csharp [--module NOM] [--out docs/]
+
+# --- Diagrammes (voir skill kb-diagrams) — jamais d'appel LLM ---
+kb extract --source file --path architecture.drawio --out data/raw/   # lire un diagramme
+kb reveng --repo /repo --lang java --diagram-out docs/architecture.mmd  # générer (système)
+# kb docgen inclut automatiquement un diagramme Mermaid par module (§ ci-dessus)
+
+# --- Export MS Office (voir skill kb-diagrams / README) — jamais d'appel LLM ---
+kb export reponse.md --format docx --out reponse.docx
+kb export reponse.md --format pptx --out reponse.pptx --title "Titre"
+kb export entites.json --format xlsx --out entites.xlsx
 
 # --- API ---
 uv run uvicorn kb_smart_metering.api.app:app --reload

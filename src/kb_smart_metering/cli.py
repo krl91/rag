@@ -32,6 +32,11 @@ Commandes disponibles :
                                              un LLM réseau ; sans LLM : kb docgen
                                              --extract-only --out … puis, après complétion
                                              par l'agent, kb docgen --from-extraction …)
+  kb export reponse.md --format docx --out reponse.docx
+                                           — convertit un Markdown déjà produit par ce
+                                             projet en Word ou PowerPoint (--format
+                                             docx|pptx), ou une liste JSON de dicts en
+                                             Excel (--format xlsx) ; aucun appel LLM
 
 Ajouter --dry-run pour simuler sans écriture (ingest, ingest-extraction, reveng).
 """
@@ -320,18 +325,29 @@ def _extract(
 
 def _extract_files(target: Path) -> list:
     """Extrait un fichier ou tous les fichiers d'un répertoire."""
+    from kb_smart_metering.extractors.diagrams import (
+        DrawioExtractor,
+        MermaidExtractor,
+        PlantUMLExtractor,
+    )
     from kb_smart_metering.extractors.office import ExcelExtractor, PdfExtractor, WordExtractor
 
     files = [target] if target.is_file() else sorted(target.iterdir())
-    docs = []
+    docs: list = []
     for f in files:
         suffix = f.suffix.lower()
         if suffix == ".docx":
-            docs.append(WordExtractor().extract(f))
+            docs.extend(WordExtractor(f).extract())
         elif suffix in {".xlsx", ".xls"}:
-            docs.append(ExcelExtractor().extract(f))
+            docs.extend(ExcelExtractor(f).extract())
         elif suffix == ".pdf":
-            docs.append(PdfExtractor().extract(f))
+            docs.extend(PdfExtractor(f).extract())
+        elif f.name.lower().endswith((".drawio", ".drawio.xml")):
+            docs.extend(DrawioExtractor(f).extract())
+        elif suffix in {".puml", ".plantuml"}:
+            docs.extend(PlantUMLExtractor(f).extract())
+        elif suffix in {".mmd", ".mermaid"}:
+            docs.extend(MermaidExtractor(f).extract())
         else:
             logger.warning("Format non supporté ignoré : %s", f)
     return docs
@@ -415,6 +431,15 @@ def reveng(
             "Incompatible avec l'ingestion directe : --dry-run/ingestion ignorés si --out est fourni.",
         ),
     ] = None,
+    diagram_out: Annotated[
+        Optional[str],
+        typer.Option(
+            "--diagram-out",
+            help="Si fourni, écrit un diagramme Mermaid système (toutes les relations "
+            "détectées) à ce chemin — déterministe, AUCUN appel LLM. Compatible avec "
+            "toutes les autres options (--out, --dry-run, ingestion directe).",
+        ),
+    ] = None,
 ) -> None:
     """Analyse le code source d'un dépôt et ingère les entités dans le graphe."""
     logging.basicConfig(
@@ -452,6 +477,18 @@ def reveng(
         f"{len(relations)} relation(s) candidate(s), "
         f"{len(docs)} document(s)."
     )
+
+    if diagram_out:
+        from kb_smart_metering.revengine.diagram_export import mermaid_for_relations
+
+        diagram = mermaid_for_relations(relations)
+        if diagram:
+            diagram_path = Path(diagram_out)
+            diagram_path.parent.mkdir(parents=True, exist_ok=True)
+            diagram_path.write_text(diagram, encoding="utf-8")
+            typer.echo(f"Diagramme Mermaid écrit : {diagram_path}")
+        else:
+            typer.echo("Aucune relation à diagrammer — --diagram-out ignoré.")
 
     # Afficher les relations détectées
     for rel in relations:
@@ -727,6 +764,83 @@ def search(
         raise typer.Exit(code=1)
 
     typer.echo(contexte)
+
+
+@app.command()
+def export(
+    input_file: Annotated[
+        Path,
+        typer.Argument(
+            help="Fichier source : .md pour --format docx/pptx, .json "
+            "(liste de dicts) pour --format xlsx"
+        ),
+    ],
+    format: Annotated[
+        str,
+        typer.Option("--format", help="Format de sortie : docx | pptx | xlsx"),
+    ],
+    out: Annotated[
+        str,
+        typer.Option("--out", help="Chemin du fichier de sortie"),
+    ],
+    title: Annotated[
+        Optional[str],
+        typer.Option("--title", help="Titre (diapositive de titre, pptx uniquement)"),
+    ] = None,
+    sheet_name: Annotated[
+        str,
+        typer.Option("--sheet-name", help="Nom de la feuille (xlsx uniquement)"),
+    ] = "Feuille1",
+) -> None:
+    """
+    Convertit un Markdown déjà produit par ce projet en Word/PowerPoint, ou
+    une liste JSON de dicts en Excel. Aucun appel LLM.
+
+    Sources typiques : sortie de `kb ask --markdown` (redirigée vers un
+    fichier), sortie de `kb docgen`, sortie de `kb ask --json`/`kb search`
+    (pour xlsx, si le JSON est déjà une liste plate de dicts).
+    """
+    import json as _json
+
+    logging.basicConfig(
+        level=logging.INFO,
+        format="%(asctime)s %(levelname)s %(name)s — %(message)s",
+    )
+
+    valid_formats = {"docx", "pptx", "xlsx"}
+    if format not in valid_formats:
+        typer.echo(f"[erreur] --format doit être parmi : {', '.join(sorted(valid_formats))}")
+        raise typer.Exit(code=1)
+
+    if not input_file.exists():
+        typer.echo(f"[erreur] Fichier introuvable : {input_file}")
+        raise typer.Exit(code=1)
+
+    out_path = Path(out)
+
+    if format == "xlsx":
+        try:
+            data = _json.loads(input_file.read_text(encoding="utf-8"))
+        except _json.JSONDecodeError as exc:
+            typer.echo(f"[erreur] JSON invalide : {exc}")
+            raise typer.Exit(code=1) from exc
+        if not isinstance(data, list) or not all(isinstance(d, dict) for d in data):
+            typer.echo("[erreur] --format xlsx attend une liste JSON de dictionnaires.")
+            raise typer.Exit(code=1)
+
+        from kb_smart_metering.export.office_writer import rows_to_xlsx
+
+        rows_to_xlsx(data, out_path, sheet_name=sheet_name)
+    else:
+        markdown_text = input_file.read_text(encoding="utf-8")
+        from kb_smart_metering.export.office_writer import markdown_to_docx, markdown_to_pptx
+
+        if format == "docx":
+            markdown_to_docx(markdown_text, out_path)
+        else:
+            markdown_to_pptx(markdown_text, out_path, title=title)
+
+    typer.echo(f"Écrit : {out_path}")
 
 
 if __name__ == "__main__":

@@ -19,6 +19,7 @@ build/
 
 # Éditeurs
 .vscode/settings.json
+.vscode/mcp.json
 .idea/
 
 # Extension VS Code copilot-bridge (Node/TypeScript)

@@ -100,6 +100,9 @@ class ModuleDoc(BaseModel):
     risques: list[str] = Field(default_factory=list)
     # Sources (fichier + lignes)
     sources: list[str] = Field(default_factory=list)
+    # Diagramme Mermaid généré déterministiquement depuis l'AST (voir
+    # diagram_export.py) — jamais par LLM.
+    diagram_mermaid: str = ""
 
 
 # ---------------------------------------------------------------------------
@@ -134,6 +137,15 @@ def render_markdown(doc: ModuleDoc) -> str:
     lines.append("")
     lines.append(doc.description or "_Aucune description générée._")
     lines.append("")
+
+    # Diagramme (généré déterministiquement depuis l'AST, aucun appel LLM)
+    if doc.diagram_mermaid:
+        lines.append("## Diagramme")
+        lines.append("")
+        lines.append("```mermaid")
+        lines.append(doc.diagram_mermaid)
+        lines.append("```")
+        lines.append("")
 
     # Composants
     if doc.composants or doc.classes:
@@ -263,6 +275,8 @@ def build_base_doc(module: ExtractedModule) -> ModuleDoc:
     risques) restent vides : à compléter soit par le LLM (generate()), soit
     par l'agent Copilot en conversation (voir build_extraction_payload()).
     """
+    from kb_smart_metering.revengine.diagram_export import mermaid_for_module
+
     published, subscribed = _aggregate_module_events(module.classes)
     return ModuleDoc(
         module_name=module.module_name,
@@ -273,6 +287,7 @@ def build_base_doc(module: ExtractedModule) -> ModuleDoc:
         events_published=published,
         events_subscribed=subscribed,
         sources=_build_sources(module),
+        diagram_mermaid=mermaid_for_module(module),
     )
 
 

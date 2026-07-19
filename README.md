@@ -3,9 +3,13 @@
 Système de gestion des connaissances projet pour architectes solution
 dans l'industrie smart metering.
 
-**Sources** : Jira, Confluence, Git, documents Word/Excel/PDF,
-transcriptions de réunions, notes Obsidian.  
+**Sources** : Jira, Confluence, Git, documents Word/Excel/PDF, diagrammes
+(drawio/PlantUML/Mermaid), transcriptions de réunions, notes Obsidian.  
 **Mémoire centrale** : Graphiti (graphe de connaissances temporel sur Neo4j).  
+**Export** : Word/PowerPoint/Excel (`kb export`) et diagrammes Mermaid
+(`kb reveng --diagram-out`, section auto-générée de `kb docgen`) —
+déterministe, aucun appel LLM. Méthodes d'organisation (PARA, Zettelkasten,
+GTD, Eisenhower) disponibles à la demande, voir skill `kb-organize`.  
 **LLM** : optionnel. Par défaut, aucun LLM réseau n'est requis — le flux
 conversationnel (`kb extract`/`kb ingest-extraction`, `kb search`) fonctionne
 entièrement depuis la conversation VS Code (Copilot Chat en mode Agent),
@@ -102,14 +106,18 @@ src/kb_smart_metering/
 ├── config.py          # Pydantic Settings (chargement .env)
 ├── cli.py             # Point d'entrée CLI (`kb`)
 ├── models/            # Entités Pydantic du domaine
-├── extractors/        # Collecte des données sources
+├── extractors/        # Collecte des données sources (dont diagrams.py :
+│                      # drawio/PlantUML/Mermaid, stdlib uniquement)
 ├── ingestion/         # graphiti.py (auto, si LLM) + graph_writer.py/
 │                       # extraction_schema.py (écriture déterministe, sans LLM)
 ├── retrieval/          # Graphe + vecteurs + reranking (toujours local)
 ├── assistant/          # chain.py (build_context, sans LLM) + llm.py (si LLM dispo)
+├── revengine/           # AST (tree-sitter) + diagram_export.py (Mermaid, sans LLM)
+├── export/              # office_writer.py : Word/PowerPoint/Excel, sans LLM
 └── api/                 # FastAPI (/health, /search, /ask)
 tests/
 copilot-bridge/         # Extension VS Code — option avancée, déconseillée par défaut
+.vscode/mcp.json.example # Serveurs MCP optionnels (drawio, plantuml)
 compose.yml             # Neo4j via Podman
 Makefile / make.ps1
 pyproject.toml
