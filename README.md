@@ -1,4 +1,4 @@
-# kb-smart-metering
+# kb-smart
 
 Système de gestion des connaissances projet pour architectes solution
 dans l'industrie smart metering.
