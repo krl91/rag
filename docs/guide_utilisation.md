@@ -1,4 +1,4 @@
-# Guide d'utilisation — kb-smart-metering
+# Guide d'utilisation — kb-smart
 
 Système de gestion des connaissances projet pour architectes solution.
 
