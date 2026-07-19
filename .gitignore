@@ -1,0 +1,30 @@
+# Secrets — ne jamais committer
+.env
+
+# Environnement virtuel uv
+.venv/
+
+# Cache Python
+__pycache__/
+*.py[cod]
+*.pyo
+.pytest_cache/
+.mypy_cache/
+.ruff_cache/
+
+# Distribution / build
+dist/
+build/
+*.egg-info/
+
+# Éditeurs
+.vscode/settings.json
+.idea/
+
+# Extension VS Code copilot-bridge (Node/TypeScript)
+copilot-bridge/node_modules/
+copilot-bridge/out/
+copilot-bridge/*.vsix
+
+# macOS
+.DS_Store

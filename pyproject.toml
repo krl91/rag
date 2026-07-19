@@ -1,0 +1,102 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "kb-smart-metering"
+version = "0.1.0"
+description = "Système de gestion des connaissances projet pour architectes solution (smart metering)"
+readme = "README.md"
+requires-python = ">=3.11"
+license = { text = "MIT" }
+
+dependencies = [
+    # Graphe de connaissances
+    "graphiti-core>=0.3.0",
+    "neo4j>=5.20.0",
+    # Sources Atlassian
+    "atlassian-python-api>=3.41.0",
+    # Sources Git
+    "GitPython>=3.1.43",
+    # Parsing documents
+    "python-docx>=1.1.0",
+    "openpyxl>=3.1.2",
+    "pymupdf>=1.24.0",
+    # Embeddings & reranking
+    "sentence-transformers>=3.0.0",
+    # API & CLI
+    "fastapi>=0.111.0",
+    "uvicorn[standard]>=0.29.0",
+    "typer>=0.12.3",
+    # Configuration & validation
+    "pydantic>=2.7.0",
+    "pydantic-settings>=2.3.0",
+    "python-dotenv>=1.0.1",
+    # HTTP
+    "httpx>=0.27.0",
+]
+
+[project.optional-dependencies]
+revengine = [
+    # Analyse statique de code (rétro-ingénierie Java/Python/C#)
+    # Wheels Windows binaires disponibles sans compilateur C :
+    #   tree-sitter       : win_amd64 dès v0.22.2, win_arm64 dès v0.23.0
+    #   tree-sitter-language-pack : win_amd64 dès v0.3.0 (abi3), win_arm64 dès v1.8.0
+    #   → aucun Visual Studio Build Tools requis sur les plateformes supportées
+    "tree-sitter>=0.22.0",
+    "tree-sitter-language-pack>=0.3.0",
+]
+dev = [
+    "pytest>=8.2.0",
+    "pytest-asyncio>=0.23.0",
+    "pytest-mock>=3.14.0",
+    "ruff>=0.4.0",
+    "mypy>=1.10.0",
+    "types-openpyxl>=3.1.0",
+]
+
+[project.scripts]
+kb = "kb_smart_metering.cli:app"
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/kb_smart_metering"]
+
+[tool.ruff]
+target-version = "py311"
+line-length = 100
+src = ["src"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "UP", "B", "SIM"]
+ignore = ["E501"]
+
+[tool.mypy]
+python_version = "3.11"
+strict = true
+plugins = ["pydantic.mypy"]
+ignore_missing_imports = true
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+
+# ---------------------------------------------------------------------------
+# Configuration uv — index PyTorch CPU pour Windows
+# ---------------------------------------------------------------------------
+# Sur Windows, PyPI installe par défaut la variante CUDA de PyTorch (~2 Go)
+# même si aucun GPU n'est présent. Cette configuration force l'index CPU
+# (variante légère ~200 Mo) uniquement sur Windows.
+# Sur Linux/macOS, PyPI est utilisé (CUDA ou CPU selon la variante disponible).
+# Pour utiliser CUDA sur Windows, commenter le bloc [tool.uv.sources] ci-dessous.
+[tool.uv.sources]
+torch = [
+    { index = "pytorch-cpu", marker = "sys_platform == 'win32'" },
+]
+
+[[tool.uv.index]]
+name = "pytorch-cpu"
+url = "https://download.pytorch.org/whl/cpu"
+explicit = true
+testpaths = ["tests"]
+markers = [
+    "integration: test d'intégration nécessitant Neo4j et Ollama actifs (skip par défaut)",
+]

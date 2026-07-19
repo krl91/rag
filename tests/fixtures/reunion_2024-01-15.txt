@@ -1,0 +1,9 @@
+Réunion Architecture Smart Metering — 2024-01-15
+
+[00:00:05] Jean Dupont: Bonjour tout le monde, on commence la réunion.
+[00:01:23] Alice Martin: Merci Jean. Aujourd'hui on discute de l'intégration MDM v3.
+[00:02:45] Jean Dupont: En effet, le composant de collecte est prêt pour les tests.
+[00:04:10] Bob Durand: J'ai une question sur la sécurité des échanges.
+[00:05:30] Alice Martin: Bonne question Bob, on utilise mTLS pour tous les flux.
+[00:07:00] Jean Dupont: Parfait. On prévoit un déploiement la semaine prochaine.
+[00:08:15] Bob Durand: Je serai disponible pour valider en recette.

@@ -1,0 +1,53 @@
+{
+  "name": "kb-copilot-bridge",
+  "displayName": "KB Copilot Bridge",
+  "description": "Expose GitHub Copilot Chat (via l'API publique vscode.lm) comme endpoint local OpenAI-compatible pour kb-smart-metering, sur une machine sans Ollama.",
+  "version": "0.1.0",
+  "publisher": "kb-smart-metering",
+  "private": true,
+  "engines": {
+    "vscode": "^1.90.0"
+  },
+  "categories": ["Other"],
+  "activationEvents": [],
+  "main": "./out/extension.js",
+  "contributes": {
+    "commands": [
+      {
+        "command": "kbCopilotBridge.start",
+        "title": "KB Bridge: Démarrer le pont Copilot"
+      },
+      {
+        "command": "kbCopilotBridge.stop",
+        "title": "KB Bridge: Arrêter le pont Copilot"
+      }
+    ],
+    "configuration": {
+      "title": "KB Copilot Bridge",
+      "properties": {
+        "kbCopilotBridge.port": {
+          "type": "number",
+          "default": 4141,
+          "description": "Port d'écoute local (127.0.0.1 uniquement, jamais exposé sur le réseau)."
+        },
+        "kbCopilotBridge.modelFamily": {
+          "type": "string",
+          "default": "gpt-4o",
+          "description": "Famille de modèle Copilot par défaut (ex: gpt-4o, gpt-4o-mini, claude-3.5-sonnet). Peut être surchargée par requête via le champ \"model\"."
+        }
+      }
+    }
+  },
+  "scripts": {
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "vscode:prepublish": "npm run compile",
+    "package": "vsce package"
+  },
+  "devDependencies": {
+    "@types/node": "^20.14.0",
+    "@types/vscode": "^1.90.0",
+    "@vscode/vsce": "^2.29.0",
+    "typescript": "^5.4.5"
+  }
+}

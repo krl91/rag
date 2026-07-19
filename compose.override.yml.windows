@@ -1,0 +1,34 @@
+# compose.override.yml — Ajustements Windows (Podman Desktop / WSL2)
+#
+# Ce fichier est chargé AUTOMATIQUEMENT par "podman compose up" lorsqu'il est
+# présent dans le même répertoire que compose.yml. Il complète le fichier
+# principal sans le modifier.
+#
+# Usage :
+#   - Sur Linux/macOS : NE PAS placer ce fichier (ou le supprimer).
+#     Le compose.yml seul est suffisant.
+#   - Sur Windows avec Podman Desktop : copier ce fichier à la racine du dépôt.
+#
+# Copie depuis la racine du dépôt (PowerShell) :
+#   Copy-Item compose.override.yml.windows compose.override.yml
+#
+# Pour revenir au comportement standard :
+#   Remove-Item compose.override.yml
+
+services:
+  neo4j:
+    # Healthcheck alternatif via HTTP.
+    # Raison : "neo4j status" peut échouer dans certaines configurations
+    # Podman Desktop / WSL2 si le chemin de l'exécutable neo4j n'est pas
+    # dans le PATH interne du conteneur au moment du check.
+    # wget est disponible dans l'image neo4j:5 (Ubuntu).
+    healthcheck:
+      test:
+        [
+          "CMD-SHELL",
+          "wget --no-verbose --tries=1 --spider http://localhost:7474 2>/dev/null && exit 0 || exit 1",
+        ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+      start_period: 60s
